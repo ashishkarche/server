@@ -9,13 +9,15 @@ const PORT = process.env.PORT || 5000; // Use dynamic port for deployment
 
 // Enable CORS for all origins (can restrict to your frontend URL if needed)
 app.use(cors({
-  origin: '*', // Restrict to your frontend origin
-  methods: ['GET', 'POST'], // Allowed methods
-  allowedHeaders: ['Content-Type'], // Allowed headers
+  origin: 'https://ashishkarche.github.io', // Allow only your frontend URL
+  methods: ['GET', 'POST', 'OPTIONS'], // Ensure OPTIONS is allowed for preflight requests
+  allowedHeaders: ['Content-Type', 'Authorization'], // Allow Content-Type and Authorization headers
+  credentials: true // Allow credentials if you are using cookies or authorization headers
 }));
 
-// Middleware to parse incoming JSON data
-app.use(bodyParser.json());
+
+// Handle preflight OPTIONS request for CORS
+app.options('*', cors());
 
 // Establish connection to the MySQL database with SSL
 const db = mysql.createConnection({
