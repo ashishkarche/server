@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 5000; // Use dynamic port for deployment
 
 // Enable CORS for all origins (can restrict to your frontend URL if needed)
 app.use(cors({
-  origin: 'https://ashishkarche.github.io', // Restrict to your frontend origin
+  origin: '*', // Restrict to your frontend origin
   methods: ['GET', 'POST'], // Allowed methods
   allowedHeaders: ['Content-Type'], // Allowed headers
 }));
