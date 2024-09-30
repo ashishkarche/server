@@ -16,6 +16,7 @@
       "destination": "/index.js"
     }
   ],
+  
   "headers": [
     {
       "source": "/(.*)",  
@@ -38,5 +39,8 @@
         }
       ]
     }
+  ],
+  "files": [
+    "isrgrootx1.pem" 
   ]
 }
