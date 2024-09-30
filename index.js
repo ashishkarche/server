@@ -27,16 +27,16 @@ app.options('*', (req, res) => {
 
 
 // Establish connection to the MySQL database with SSL
+const sslCert = process.env.SSL_CERT;
+
 const db = mysql.createConnection({
   host: 'gateway01.ap-southeast-1.prod.aws.tidbcloud.com',
   user: '3wpVC1PBcNR2QzZ.root',
   password: 'JEXKYgpaNzuc47xI',
   database: 'test',
-  // Update the path to the correct location
   ssl: {
-    ca: fs.readFileSync('isrgrootx1.pem') // Adjust the path to point to the 'server' folder
-  }
-
+    ca: sslCert  // Use the environment variable instead of reading from the file
+  },
 });
 
 // Connect to the database
