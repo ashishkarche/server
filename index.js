@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 5000; // Use dynamic port for deployment
 // Enable CORS for all origins (can restrict to your frontend URL if needed)
 app.use(cors({
   origin: 'https://download-server-gamma.vercel.app', // Specify your frontend URL
-  methods: ['GET', 'POST', 'OPTIONS'], 
+  methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true // Set to true if using cookies or authorization headers
 }));
@@ -32,9 +32,11 @@ const db = mysql.createConnection({
   user: '3wpVC1PBcNR2QzZ.root',
   password: 'JEXKYgpaNzuc47xI',
   database: 'test',
+  // Update the path to the correct location
   ssl: {
-    ca: fs.readFileSync('./isrgrootx1.pem'), // Make sure the path to the SSL CA file is correct
-  },
+    ca: fs.readFileSync('isrgrootx1.pem') // Adjust the path to point to the 'server' folder
+  }
+
 });
 
 // Connect to the database
