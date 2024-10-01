@@ -59,17 +59,25 @@ app.post('/check-token', (req, res) => {
     return res.status(400).json({ success: false, message: 'Token is required' });
   }
 
-  // First, delete expired tokens
-  const deleteExpiredQuery = `DELETE FROM download_links WHERE link_expiry_time < NOW()`;
+  // First, delete expired tokens and associated files
+  const deleteExpiredQuery = `
+    DELETE download_links, uploaded_files 
+    FROM download_links 
+    LEFT JOIN uploaded_files ON download_links.file_id = uploaded_files.file_id 
+    WHERE download_links.link_expiry_time < NOW()
+  `;
 
   db.query(deleteExpiredQuery, (err) => {
     if (err) {
-      console.error('Error deleting expired tokens:', err);
+      console.error('Error deleting expired tokens and files:', err);
       return res.status(500).json({ success: false, message: 'Database error' });
     }
 
-    // After deleting expired tokens, check if the provided token is valid
-    const checkTokenQuery = `SELECT * FROM download_links WHERE token = ? AND link_expiry_time > NOW()`;
+    // After deleting expired tokens and files, check if the provided token is valid
+    const checkTokenQuery = `
+      SELECT * FROM download_links 
+      WHERE token = ? AND link_expiry_time > NOW()
+    `;
 
     db.query(checkTokenQuery, [token], (err, results) => {
       if (err) {
@@ -85,6 +93,7 @@ app.post('/check-token', (req, res) => {
     });
   });
 });
+
 
 
 // GET route to download the file based on token
