@@ -88,7 +88,7 @@ app.post('/check-token', (req, res) => {
 
 
 
-// GET route to download the file based on token
+/// GET route to download the file based on token
 app.get('/download', (req, res) => {
   const { token } = req.query;
 
@@ -97,42 +97,53 @@ app.get('/download', (req, res) => {
     return res.status(400).json({ message: 'Token is required' });
   }
 
-  // Query to find the file associated with the token
-  const query = 'SELECT file_name, file_id FROM download_links WHERE token = ?';
+  // Query to find the file associated with the token and check expiry time
+  const query = `SELECT file_name, file_id, link_expiry_time FROM download_links WHERE token = ?`;
   db.query(query, [token], (err, results) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ message: 'Database error' });
     }
 
-    // If the token is found
     if (results.length > 0) {
-      const { file_name, file_id } = results[0];
+      const { file_name, file_id, link_expiry_time } = results[0];
 
-      // Query to retrieve the actual file data
-      const fileQuery = 'SELECT file_data FROM uploaded_files WHERE file_id = ?';
-      db.query(fileQuery, [file_id], (err, fileResults) => {
-        if (err) {
-          console.error('Database error:', err);
-          return res.status(500).json({ message: 'Database error' });
-        }
+      // Check if the link has expired
+      if (new Date(link_expiry_time) < new Date()) {
+        // Delete the expired token
+        const deleteQuery = `DELETE FROM download_links WHERE token = ?`;
+        db.query(deleteQuery, [token], (deleteErr) => {
+          if (deleteErr) {
+            console.error('Error deleting expired token:', deleteErr);
+            return res.status(500).json({ message: 'Database error while deleting token' });
+          }
 
-        // If file data is found, initiate download
-        if (fileResults.length > 0) {
-          const fileData = fileResults[0].file_data;
+          // Send response that the link is expired
+          res.status(403).json({ message: 'Link has expired' });
+        });
+      } else {
+        // Proceed to retrieve the file data if link is valid
+        const fileQuery = `SELECT file_data FROM uploaded_files WHERE file_id = ?`;
+        db.query(fileQuery, [file_id], (fileErr, fileResults) => {
+          if (fileErr) {
+            console.error('Database error:', fileErr);
+            return res.status(500).json({ message: 'Database error' });
+          }
 
-          // Set the headers for file download
-          res.setHeader('Content-Disposition', `attachment; filename="${file_name}"`);
-          res.setHeader('Content-Type', 'application/octet-stream');
-          res.send(fileData);
-        } else {
-          // If no file data found
-          res.status(404).json({ message: 'File not found' });
-        }
-      });
+          if (fileResults.length > 0) {
+            const fileData = fileResults[0].file_data;
+
+            // Set the headers for file download
+            res.setHeader('Content-Disposition', `attachment; filename="${file_name}"`);
+            res.setHeader('Content-Type', 'application/octet-stream');
+            res.send(fileData);
+          } else {
+            res.status(404).json({ message: 'File not found' });
+          }
+        });
+      }
     } else {
-      // If token is not found or expired
-      res.status(404).json({ message: 'Token expired or not found' });
+      res.status(404).json({ message: 'Token not found or expired' });
     }
   });
 });
