@@ -55,27 +55,37 @@ db.connect((err) => {
 app.post('/check-token', (req, res) => {
   const { token } = req.body;
 
-  // Validate that token is provided
   if (!token) {
     return res.status(400).json({ success: false, message: 'Token is required' });
   }
 
-  // Query to check if token exists in the database
-  const query = 'SELECT * FROM download_links WHERE token = ?';
-  db.query(query, [token], (err, results) => {
+  // First, delete expired tokens
+  const deleteExpiredQuery = `DELETE FROM download_links WHERE link_expiry_time < NOW()`;
+
+  db.query(deleteExpiredQuery, (err) => {
     if (err) {
-      console.error('Database error:', err);
+      console.error('Error deleting expired tokens:', err);
       return res.status(500).json({ success: false, message: 'Database error' });
     }
 
-    // If token is found, return success
-    if (results.length > 0) {
-      res.json({ success: true, message: 'Token exists!' });
-    } else {
-      res.json({ success: false, message: 'Token not found' });
-    }
+    // After deleting expired tokens, check if the provided token is valid
+    const checkTokenQuery = `SELECT * FROM download_links WHERE token = ? AND link_expiry_time > NOW()`;
+
+    db.query(checkTokenQuery, [token], (err, results) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ success: false, message: 'Database error' });
+      }
+
+      if (results.length > 0) {
+        res.json({ success: true, message: 'Token is valid!' });
+      } else {
+        res.json({ success: false, message: 'Token expired or not found' });
+      }
+    });
   });
 });
+
 
 // GET route to download the file based on token
 app.get('/download', (req, res) => {
