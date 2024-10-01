@@ -25,6 +25,9 @@ app.options('*', (req, res) => {
   res.sendStatus(200); // Ensure you send a 200 status for preflight
 });
 
+// Add body parser middleware
+app.use(bodyParser.json()); // For parsing application/json
+app.use(bodyParser.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 
 // Establish connection to the MySQL database with SSL
 const sslCert = process.env.SSL_CERT;
