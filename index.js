@@ -88,8 +88,6 @@ app.post('/check-token', (req, res) => {
 
 
 
-/// GET route to download the file based on token
-// GET route to download the file based on token
 app.get('/download', (req, res) => {
   const { token } = req.query;
 
@@ -120,11 +118,12 @@ app.get('/download', (req, res) => {
             return res.status(500).json({ message: 'Database error while deleting expired token' });
           }
         });
-        
-        return res.status(403).json({ message: 'Link is expired' }); // Send response that link is expired
+
+        // Return response that the link has expired and do not proceed with file download
+        return res.status(403).json({ message: 'Link is expired' });
       }
 
-      // Query to retrieve the actual file data
+      // Proceed to download if the token is valid and not expired
       const fileQuery = 'SELECT file_data FROM uploaded_files WHERE file_id = ?';
       db.query(fileQuery, [file_id], (err, fileResults) => {
         if (err) {
